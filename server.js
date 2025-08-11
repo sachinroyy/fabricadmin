@@ -13,9 +13,24 @@ import dressStyleRoutes from "./routes/dressstyleroutes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from .env.local
-const envPath = path.resolve(__dirname, '.env.local');
-dotenv.config({ path: envPath, override: true });
+// Set configuration directly
+const config = {
+  PORT: 8000,
+  NODE_ENV: 'development',
+  MONGODB_URI: 'mongodb+srv://pradipkumarchaudhary06:2JRlU76O5QXlMg9E@cluster2.mak47.mongodb.net/fabricadmin?retryWrites=true&w=majority',
+  CLOUDINARY_CLOUD_NAME: 'dhaumphvl',
+  CLOUDINARY_API_KEY: '223977999232774',
+  CLOUDINARY_API_SECRET: 'A386eCIQlD5V_XxCERgSzUGwdb4',
+  CLOUDINARY_FOLDER: 'fabricadmin'
+};
+
+// Apply config to process.env
+Object.assign(process.env, config);
+
+// Log configuration
+console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`Server will run on port: ${process.env.PORT}`);
+console.log('MongoDB URI: ***MongoDB URI is set***');
 
 const app = express();
 
@@ -62,12 +77,23 @@ app.get("/api/health", (req, res) => {
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  // Set static folder - adjust the path to go up three levels from /api/server.js
+  const staticPath = path.join(__dirname, '../../client/build');
+  app.use(express.static(staticPath));
+  
+  console.log('Serving static files from:', staticPath);
   
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+    res.sendFile(path.join(staticPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('Error sending file:', err);
+        res.status(500).json({ 
+          error: 'Internal Server Error',
+          message: 'Failed to load the application'
+        });
+      }
+    });
   });
 } else {
   // Basic route for development
@@ -75,7 +101,10 @@ if (process.env.NODE_ENV === 'production') {
     res.json({
       message: "API is running in development mode",
       environment: process.env.NODE_ENV || 'development',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      nodeVersion: process.version,
+      platform: process.platform,
+      memoryUsage: process.memoryUsage()
     });
   });
 }

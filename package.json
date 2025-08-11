@@ -2,12 +2,13 @@
   "name": "admin",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.js",
+  "main": "api/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js",
-    "start": "node server.js",
-    "vercel-build": "npm install"
+    "dev": "nodemon api/server.js",
+    "start": "node api/server.js",
+    "vercel-build": "npm install",
+    "vercel-dev": "vercel dev"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "mongoose": "^8.17.0",
+    "mongoose": "^8.17.1",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0"
   },
