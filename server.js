@@ -49,25 +49,62 @@ const connectDB = async () => {
 
 // Connect to MongoDB
 connectDB();
-// Routes
+
+// API Routes
 app.use("/api/products", productRoutes);
 app.use("/api/topsellers", topSellerRoutes);
 app.use("/api/dressstyles", dressStyleRoutes);
 
-// Basic route for testing
-app.get("/", (req, res) => {
-  res.send("API is running...");
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "API is running" });
+});
+
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+} else {
+  // Basic route for development
+  app.get("/", (req, res) => {
+    res.json({
+      message: "API is running in development mode",
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    });
+  });
+}
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
+    path: req.path,
+    method: req.method
+  });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  res.send("API is running...");
+  console.error('Error:', err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err.message : {}
+  });
 });
 
 const PORT = process.env.PORT || 8000;
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`API URL: http://localhost:${PORT}`);
 });
 
 // Handle unhandled promise rejections
