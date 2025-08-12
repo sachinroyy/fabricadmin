@@ -131,10 +131,13 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 8000;
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`API URL: http://localhost:${PORT}`);
-});
+// const server = app.listen(PORT, '0.0.0.0', () => {
+//   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+//   console.log(`API URL: http://localhost:${PORT}`);
+// });
+
+export default app;
+
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
