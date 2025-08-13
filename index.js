@@ -34,13 +34,36 @@ app.use(express.json());
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // 30 seconds timeout for server selection
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      connectTimeoutMS: 10000, // 10 seconds to connect to MongoDB
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      retryWrites: true,
+      w: 'majority'
     });
-    console.log('MongoDB Connected Successfully');
+    
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Handle connection events
+    mongoose.connection.on('connected', () => {
+      console.log('Mongoose connected to DB');
+    });
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('Mongoose connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('Mongoose disconnected');
+    });
+    
+    return conn;
   } catch (error) {
     console.error('MongoDB Connection Error:', error.message);
+    // Exit process with failure
     process.exit(1);
   }
 };
@@ -93,12 +116,32 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// Start server with MongoDB connection
 const PORT = process.env.PORT || 8000;
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  console.log(`API URL: http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+      console.log(`API URL: http://localhost:${PORT}`);
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (err) => {
+      console.error('UNHANDLED REJECTION! 💥 Shutting down...');
+      console.error(err);
+      server.close(() => {
+        process.exit(1);
+      });
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+// Start the application
+startServer();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
