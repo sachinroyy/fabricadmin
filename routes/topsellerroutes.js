@@ -50,11 +50,22 @@ const cleanupFile = (file) => {
 // POST API - Create Top Seller
 router.post("/", upload.single('image'), async (req, res) => {
   try {
-    const { name, description, position } = req.body;
+    const { name, description, position, price } = req.body;
     
     if (!name || !description) {
       if (req.file) cleanupFile(req.file);
       return res.status(400).json({ success: false, error: 'Name and description are required' });
+    }
+
+    // Validate price
+    if (price === undefined || price === '') {
+      if (req.file) cleanupFile(req.file);
+      return res.status(400).json({ success: false, error: 'Price is required' });
+    }
+    const parsedPrice = Number(price);
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      if (req.file) cleanupFile(req.file);
+      return res.status(400).json({ success: false, error: 'Price must be a non-negative number' });
     }
 
     // Check for duplicate name
@@ -67,6 +78,7 @@ router.post("/", upload.single('image'), async (req, res) => {
     const topSellerData = { 
       name: name.trim(),
       description: description.trim(),
+      price: parsedPrice,
       isActive: true
     };
 
@@ -185,7 +197,7 @@ router.get("/:id", async (req, res) => {
 // PUT API - Update Top Seller
 router.put("/:id", upload.single('image'), async (req, res) => {
   try {
-    const { name, description, isActive, position } = req.body;
+    const { name, description, isActive, position, price } = req.body;
     const updateData = {};
     
     // Check if the top seller exists
@@ -222,6 +234,16 @@ router.put("/:id", upload.single('image'), async (req, res) => {
     if (description) updateData.description = description.trim();
     if (isActive !== undefined) updateData.isActive = isActive === 'true';
     if (position !== undefined) updateData.position = parseInt(position, 10);
+
+    // Handle price update if provided
+    if (price !== undefined) {
+      const newPrice = Number(price);
+      if (isNaN(newPrice) || newPrice < 0) {
+        if (req.file) cleanupFile(req.file);
+        return res.status(400).json({ success: false, error: 'Price must be a non-negative number' });
+      }
+      updateData.price = newPrice;
+    }
     
     // Find the existing top seller
     const existingTopSeller = await TopSeller.findById(req.params.id);

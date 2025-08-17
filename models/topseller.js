@@ -4,14 +4,24 @@ const topSellerSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Dress style name is required'],
       trim: true,
       unique: true,
       maxlength: [50, 'Dress style name cannot exceed 50 characters']
     },
     description: {
       type: String,
-      required: [true, 'Description is required']
+    },
+    price: {
+      type: Number,
+      min: [0, 'Price must be a positive number'],
+      
+      set: val => Math.round(val * 100) / 100 // Rounds to 2 decimal places
+    },
+
+    position: {
+      type: Number,
+      default: null,
+      min: [0, 'Position must be a non-negative number']
     },
     image: {
       type: String,
