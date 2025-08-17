@@ -25,7 +25,7 @@ const config = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '223977999232774',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 'A386eCIQlD5V_XxCERgSzUGwdb4',
   CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER || 'fabricadmin',
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'https://fabric-phi-nine.vercel.app/',
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'https://fabric-phi-nine.vercel.app',
   // IMPORTANT: Must match the clientId used by GoogleOAuthProvider in the frontend
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '330609866345-0tir9es9jgovag6nrl221kl2mdrl6r0b.apps.googleusercontent.com',
   JWT_SECRET: process.env.JWT_SECRET || 'dev_secret_change_me'
