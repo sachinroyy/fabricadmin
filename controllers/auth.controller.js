@@ -6,10 +6,14 @@ import bcrypt from "bcryptjs";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const setAuthCookie = (res, token) => {
-  const isProd = process.env.NODE_ENV === "production";
+  // Determine if we should use secure cookies suitable for cross-site usage
+  const origins = `${process.env.CLIENT_ORIGIN || ''},${process.env.CLIENT_ORIGINS || ''}`;
+  const httpsConfigured = /https:\/\//.test(origins);
+  const isProd = process.env.NODE_ENV === "production" || httpsConfigured || process.env.FORCE_SECURE_COOKIES === 'true';
+
   res.cookie("auth_token", token, {
     httpOnly: true,
-    secure: isProd,               // true on HTTPS
+    secure: isProd,               // must be true for SameSite=None
     sameSite: isProd ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
