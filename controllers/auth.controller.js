@@ -71,6 +71,7 @@ export const googleLogin = async (req, res) => {
 
     return res.json({
       user: { id: user._id, name: user.name, email: user.email, picture: user.picture },
+      token,
     });
   } catch (err) {
     console.error("googleLogin error:", err?.message || err);
@@ -93,7 +94,7 @@ export const register = async (req, res) => {
 
     const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     setAuthCookie(res, token);
-    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email } });
+    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email }, token });
   } catch (err) {
     console.error("register error:", err?.message || err);
     res.status(500).json({ message: "Registration failed" });
@@ -113,7 +114,7 @@ export const login = async (req, res) => {
 
     const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     setAuthCookie(res, token);
-    res.json({ user: { id: user._id, name: user.name, email: user.email, picture: user.picture } });
+    res.json({ user: { id: user._id, name: user.name, email: user.email, picture: user.picture }, token });
   } catch (err) {
     console.error("login error:", err?.message || err);
     res.status(500).json({ message: "Login failed" });
