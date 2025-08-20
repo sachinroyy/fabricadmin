@@ -9,6 +9,7 @@ import productRoutes from "./routes/productroutes.js";
 import topSellerRoutes from "./routes/topsellerroutes.js";
 import dressStyleRoutes from "./routes/dressstyleroutes.js";
 import authRoutes from "./routes/authroutes.js";
+import cartRoutes from "./routes/cartroutes.js";
 // Configure __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,9 @@ const config = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '223977999232774',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 'A386eCIQlD5V_XxCERgSzUGwdb4',
   CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER || 'fabricadmin',
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'https://fabric-phi-nine.vercel.app',
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'https://fabric-phi-nine.vercel.app' || 'http://localhost:5173',
+  // CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+
   // IMPORTANT: Must match the clientId used by GoogleOAuthProvider in the frontend
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '330609866345-0tir9es9jgovag6nrl221kl2mdrl6r0b.apps.googleusercontent.com',
   JWT_SECRET: process.env.JWT_SECRET || 'dev_secret_change_me'
@@ -90,6 +93,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/topsellers", topSellerRoutes);
 app.use("/api/dressstyles", dressStyleRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/cart", cartRoutes);
 
 // Minimal Sign-in Page with Google Identity Services
 app.get('/signin', (req, res) => {
@@ -203,7 +207,7 @@ const startServer = async () => {
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (err) => {
-      console.error('UNHANDLED REJECTION! 💥 Shutting down...');
+      console.error('UNHANDLED REJECTION! Shutting down...');
       console.error(err);
       server.close(() => {
         process.exit(1);

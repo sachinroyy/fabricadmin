@@ -13,6 +13,11 @@ const dressStyleSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Description is required']
     },
+    price: {
+      type: Number,
+      default: 0,
+      min: [0, 'Price cannot be negative']
+    },
     image: {
       type: String,
       default: ''

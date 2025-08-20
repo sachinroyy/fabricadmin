@@ -73,7 +73,7 @@ router.get("/:id", async (req, res) => {
 // POST create new dress style
 router.post("/", upload.single('image'), async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, price } = req.body;
     let imageUrl = '';
     let imagePublicId = '';
 
@@ -112,6 +112,7 @@ router.post("/", upload.single('image'), async (req, res) => {
     const newDressStyle = new DressStyle({
       name,
       description,
+      price: Number(price) || 0,
       image: imageUrl,
       imagePublicId
     });
@@ -135,8 +136,11 @@ router.post("/", upload.single('image'), async (req, res) => {
 // PUT update dress style
 router.put("/:id", upload.single('image'), async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, price } = req.body;
     const updateData = { name, description };
+    if (price !== undefined) {
+      updateData.price = Number(price) || 0;
+    }
 
     // Check if another dress style with the same name already exists
     if (name) {
