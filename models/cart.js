@@ -6,6 +6,8 @@ const cartItemSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, min: 1, default: 1 },
     selectedSize: { type: String, default: "" },
     selectedColor: { type: String, default: "" },
+    // Indicates which collection the item originated from
+    source: { type: String, enum: ["product", "topseller", "dressstyle"], default: "product" },
     // Snapshots for price/name/image at the time of adding to cart
     priceSnapshot: { type: Number, default: 0 },
     nameSnapshot: { type: String, default: "" },

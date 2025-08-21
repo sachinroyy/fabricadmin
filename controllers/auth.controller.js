@@ -6,14 +6,10 @@ import bcrypt from "bcryptjs";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const setAuthCookie = (res, token) => {
-  // Determine if we should use secure cookies suitable for cross-site usage
-  const origins = `${process.env.CLIENT_ORIGIN || ''},${process.env.CLIENT_ORIGINS || ''}`;
-  const httpsConfigured = /https:\/\//.test(origins);
-  const isProd = process.env.NODE_ENV === "production" || httpsConfigured || process.env.FORCE_SECURE_COOKIES === 'true';
-
+  const isProd = process.env.NODE_ENV === "production";
   res.cookie("auth_token", token, {
     httpOnly: true,
-    secure: isProd,               // must be true for SameSite=None
+    secure: isProd,               // true on HTTPS
     sameSite: isProd ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -71,7 +67,6 @@ export const googleLogin = async (req, res) => {
 
     return res.json({
       user: { id: user._id, name: user.name, email: user.email, picture: user.picture },
-      token,
     });
   } catch (err) {
     console.error("googleLogin error:", err?.message || err);
@@ -94,7 +89,7 @@ export const register = async (req, res) => {
 
     const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     setAuthCookie(res, token);
-    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email }, token });
+    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     console.error("register error:", err?.message || err);
     res.status(500).json({ message: "Registration failed" });
@@ -114,7 +109,7 @@ export const login = async (req, res) => {
 
     const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     setAuthCookie(res, token);
-    res.json({ user: { id: user._id, name: user.name, email: user.email, picture: user.picture }, token });
+    res.json({ user: { id: user._id, name: user.name, email: user.email, picture: user.picture } });
   } catch (err) {
     console.error("login error:", err?.message || err);
     res.status(500).json({ message: "Login failed" });

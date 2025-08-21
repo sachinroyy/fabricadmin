@@ -31,10 +31,17 @@ router.post("/add", requireAuth, async (req, res) => {
     const { productId, quantity = 1, selectedSize = "", selectedColor = "" } = req.body;
     if (!productId) return res.status(400).json({ success: false, message: "productId is required" });
 
-    // Validate product from Product or TopSeller collection
+    // Validate product from Product, TopSeller, or DressStyle collection
     let itemDoc = await Product.findById(productId).lean();
-    if (!itemDoc) itemDoc = await TopSeller.findById(productId).lean();
-    if (!itemDoc) itemDoc = await DressStyle.findById(productId).lean();
+    let source = 'product';
+    if (!itemDoc) {
+      itemDoc = await TopSeller.findById(productId).lean();
+      if (itemDoc) source = 'topseller';
+    }
+    if (!itemDoc) {
+      itemDoc = await DressStyle.findById(productId).lean();
+      if (itemDoc) source = 'dressstyle';
+    }
     if (!itemDoc) return res.status(404).json({ success: false, message: "Product not found" });
 
     const userId = toObjectId(req.userId);
@@ -56,12 +63,14 @@ router.post("/add", requireAuth, async (req, res) => {
       existingItem.priceSnapshot = itemDoc.price;
       existingItem.nameSnapshot = itemDoc.name;
       existingItem.imageSnapshot = itemDoc.image || "";
+      if (source) existingItem.source = source;
     } else {
       cart.items.push({
         product: toObjectId(productId),
         quantity: Number(quantity) || 1,
         selectedSize,
         selectedColor,
+        source,
         priceSnapshot: itemDoc.price,
         nameSnapshot: itemDoc.name,
         imageSnapshot: itemDoc.image || ""
