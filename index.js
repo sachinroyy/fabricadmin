@@ -26,7 +26,7 @@ const config = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '223977999232774',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 'A386eCIQlD5V_XxCERgSzUGwdb4',
   CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER || 'fabricadmin',
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  // CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   CLIENT_ORIGINS: process.env.CLIENT_ORIGINS || 'https://fabric-phi-nine.vercel.app',
 
   // IMPORTANT: Must match the clientId used by GoogleOAuthProvider in the frontend
@@ -40,7 +40,39 @@ Object.assign(process.env, config);
 const app = express();
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
+// CORS: allow single origin via CLIENT_ORIGIN or multiple via CLIENT_ORIGINS (comma-separated)
+const allowedOrigins = (
+  process.env.CLIENT_ORIGINS?.split(',')
+    .map(o => o.trim())
+    .filter(Boolean)
+    || []
+);
+if (process.env.CLIENT_ORIGIN && !allowedOrigins.includes(process.env.CLIENT_ORIGIN)) {
+  allowedOrigins.push(process.env.CLIENT_ORIGIN);
+}
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow mobile apps or curl with no origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+}));
+
+// Handle preflight for all routes
+app.options('*', cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 
