@@ -41,23 +41,38 @@ const app = express();
 
 // Middleware
 // CORS: allow single origin via CLIENT_ORIGIN or multiple via CLIENT_ORIGINS (comma-separated)
-const allowedOrigins = (
-  process.env.CLIENT_ORIGINS?.split(',')
-    .map(o => o.trim())
-    .filter(Boolean)
-    || []
+// Supports regex by prefixing an entry with 'regex:' or add default for Vercel previews
+const rawOrigins = (
+  process.env.CLIENT_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || []
 );
-if (process.env.CLIENT_ORIGIN && !allowedOrigins.includes(process.env.CLIENT_ORIGIN)) {
-  allowedOrigins.push(process.env.CLIENT_ORIGIN);
-}
+if (process.env.CLIENT_ORIGIN) rawOrigins.push(process.env.CLIENT_ORIGIN.trim());
+
+// Build matchers: exact string matches and regexes
+const originMatchers = rawOrigins.map(val => {
+  if (val.startsWith('regex:')) {
+    try { return new RegExp(val.slice(6)); } catch { return val; }
+  }
+  return val;
+});
+
+// Always allow localhost dev and any Vercel preview domain by default
+originMatchers.push('http://localhost:5173');
+originMatchers.push(/\.vercel\.app$/);
+
+console.log('[cors] Allowed origins:', originMatchers.map(m => m instanceof RegExp ? m.toString() : m));
+
+const isOriginAllowed = (origin) => {
+  return originMatchers.some(m => {
+    if (m instanceof RegExp) return m.test(origin);
+    return m === origin;
+  });
+};
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow mobile apps or curl with no origin
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (isOriginAllowed(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
@@ -67,7 +82,7 @@ app.use(cors({
 app.options(/.*/, cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isOriginAllowed(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
