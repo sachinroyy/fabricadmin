@@ -63,8 +63,8 @@ app.use(cors({
   credentials: true,
 }));
 
-// Handle preflight for all routes
-app.options('*', cors({
+// Handle preflight for all routes (Express 5 / path-to-regexp v6 compatible)
+app.options('(.*)', cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
@@ -193,7 +193,8 @@ if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, '../../client/build');
   app.use(express.static(staticPath));
   
-  app.get('*', (_, res) => {
+  // Catch-all route for SPA (Express 5 / path-to-regexp v6 compatible)
+  app.get('(.*)', (_, res) => {
     res.sendFile(path.join(staticPath, 'index.html'));
   });
 } else {
