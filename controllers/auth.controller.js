@@ -69,8 +69,10 @@ export const googleLogin = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, picture: user.picture },
     });
   } catch (err) {
-    console.error("googleLogin error:", err?.message || err);
-    return res.status(401).json({ message: "Invalid Google token" });
+    // Improve visibility into the cause of 401 during verification
+    console.error("[googleLogin] verifyIdToken failed:", err?.message || err);
+    // TEMP: expose error message to help diagnose in Render logs/Network. Remove after fix.
+    return res.status(401).json({ message: "Invalid Google token", detail: err?.message || String(err) });
   }
 };
 
