@@ -26,7 +26,7 @@ const config = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '223977999232774',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 'A386eCIQlD5V_XxCERgSzUGwdb4',
   CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER || 'fabricadmin',
-  // CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   CLIENT_ORIGINS: process.env.CLIENT_ORIGINS || 'https://fabric-phi-nine.vercel.app',
 
   // IMPORTANT: Must match the clientId used by GoogleOAuthProvider in the frontend
@@ -64,7 +64,7 @@ app.use(cors({
 }));
 
 // Handle preflight for all routes (Express 5 / path-to-regexp v6 compatible)
-app.options('(.*)', cors({
+app.options(/.*/, cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
@@ -194,7 +194,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(staticPath));
   
   // Catch-all route for SPA (Express 5 / path-to-regexp v6 compatible)
-  app.get('(.*)', (_, res) => {
+  app.get('/(.*)', (_, res) => {
     res.sendFile(path.join(staticPath, 'index.html'));
   });
 } else {
