@@ -14,9 +14,9 @@ const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 // GET /api/cart - get authenticated user's cart
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.userId })
-      .populate("items.product", "name price image")
-      .lean();
+    // Do NOT populate here so that items.product retains the original ObjectId
+    // Populating with ref: "Product" would set product to null for items from other collections
+    const cart = await Cart.findOne({ user: req.userId }).lean();
 
     return res.json({ success: true, cart: cart || { user: req.userId, items: [] } });
   } catch (err) {
@@ -90,16 +90,24 @@ router.post("/add", requireAuth, async (req, res) => {
 // POST /api/cart/decrement - decrement item quantity (remove if reaches 0)
 router.post("/decrement", requireAuth, async (req, res) => {
   try {
-    const { productId, selectedSize = "", selectedColor = "" } = req.body;
-    if (!productId) return res.status(400).json({ success: false, message: "productId is required" });
+    const { itemId, productId, selectedSize = "", selectedColor = "" } = req.body;
 
     const userId = toObjectId(req.userId);
     let cart = await Cart.findOne({ user: userId });
     if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
 
-    const idx = cart.items.findIndex(
-      (i) => i.product.toString() === productId && i.selectedSize === selectedSize && i.selectedColor === selectedColor
-    );
+    let idx = -1;
+    // Prefer itemId when provided
+    if (itemId) {
+      idx = cart.items.findIndex((i) => i._id.toString() === String(itemId));
+    } else if (productId) {
+      idx = cart.items.findIndex(
+        (i) => i.product.toString() === productId && i.selectedSize === selectedSize && i.selectedColor === selectedColor
+      );
+    } else {
+      return res.status(400).json({ success: false, message: "productId or itemId is required" });
+    }
+
     if (idx === -1) return res.status(404).json({ success: false, message: "Item not in cart" });
 
     cart.items[idx].quantity -= 1;

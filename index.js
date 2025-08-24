@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -10,12 +11,26 @@ import topSellerRoutes from "./routes/topsellerroutes.js";
 import dressStyleRoutes from "./routes/dressstyleroutes.js";
 import authRoutes from "./routes/authroutes.js";
 import cartRoutes from "./routes/cartroutes.js";
+import paymentRoutes from "./routes/paymentroutes.js";
 // Configure __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables early
-dotenv.config();
+// Load environment variables early (.env.local preferred if present)
+(() => {
+  const envLocal = path.join(process.cwd(), '.env.local');
+  const envDefault = path.join(process.cwd(), '.env');
+  if (fs.existsSync(envLocal)) {
+    dotenv.config({ path: envLocal });
+    console.log('[env] Loaded .env.local');
+  } else if (fs.existsSync(envDefault)) {
+    dotenv.config({ path: envDefault });
+    console.log('[env] Loaded .env');
+  } else {
+    dotenv.config();
+    console.log('[env] Loaded process env (no .env files found)');
+  }
+})();
 
 // Configuration
 const config = {
@@ -27,7 +42,6 @@ const config = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 'A386eCIQlD5V_XxCERgSzUGwdb4',
   CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER || 'fabricadmin',
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173' || 'https://fabric-phi-nine.vercel.app',
-  CLIENT_ORIGINS: process.env.CLIENT_ORIGINS || 'https://fabric-phi-nine.vercel.app' || 'http://localhost:5173',
 
   // IMPORTANT: Must match the clientId used by GoogleOAuthProvider in the frontend
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '330609866345-0tir9es9jgovag6nrl221kl2mdrl6r0b.apps.googleusercontent.com',
@@ -141,6 +155,7 @@ app.use("/api/topsellers", topSellerRoutes);
 app.use("/api/dressstyles", dressStyleRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Minimal Sign-in Page with Google Identity Services
 app.get('/signin', (req, res) => {

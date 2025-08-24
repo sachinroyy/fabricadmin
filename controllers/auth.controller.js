@@ -21,6 +21,7 @@ export const googleLogin = async (req, res) => {
     if (!credential) return res.status(400).json({ message: "Missing credential" });
 
     // Verify the Google ID token
+    console.log(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -67,6 +68,7 @@ export const googleLogin = async (req, res) => {
 
     return res.json({
       user: { id: user._id, name: user.name, email: user.email, picture: user.picture },
+      token,
     });
   } catch (err) {
     // Improve visibility into the cause of 401 during verification
@@ -91,7 +93,7 @@ export const register = async (req, res) => {
 
     const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     setAuthCookie(res, token);
-    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email } });
+    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email }, token });
   } catch (err) {
     console.error("register error:", err?.message || err);
     res.status(500).json({ message: "Registration failed" });
@@ -111,7 +113,7 @@ export const login = async (req, res) => {
 
     const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     setAuthCookie(res, token);
-    res.json({ user: { id: user._id, name: user.name, email: user.email, picture: user.picture } });
+    res.json({ user: { id: user._id, name: user.name, email: user.email, picture: user.picture }, token });
   } catch (err) {
     console.error("login error:", err?.message || err);
     res.status(500).json({ message: "Login failed" });
